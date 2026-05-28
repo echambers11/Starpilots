@@ -5,7 +5,8 @@ import pygame
 # import json
 
 from settings import Settings
-from entity import Entity
+from asteroid import Asteroid
+from stars import Star
 
 
 
@@ -19,13 +20,12 @@ class Game:
         pygame.display.set_caption("Starpilots")
 
         # entities
+        self._create_stars()
         self.entities = pygame.sprite.Group()
 
         # asteroids
-        self.entities.add(Entity(self, 'asteroid1', [700, 475], 0, 5, 0, 0))
-        self.entities.add(Entity(self, 'asteroid2', [900, 475], 0, 0, 5, 5))
-        self.entities.add(Entity(self, 'asteroid3', [500, 475], 0, 0, 0, 5))
-        self.entities.add(Entity(self, 'asteroid4', [300, 475], 0, 45, 5, 0))
+        for i in range(0, 9):
+            self.entities.add(Asteroid(self, 1, [i * 100, i * 100], 0, i*160, 1, 5, 5))
 
 
     def run(self):
@@ -34,10 +34,19 @@ class Game:
             self._check_events()
             self.clock.tick(60)
 
+    
+    '''create entities'''
+    def _create_stars(self):
+        self.stars = pygame.sprite.Group()
+        for x in range(0, self.settings.star_count):
+            self.stars.add(Star(self))
+
 
     """draw screen"""
     def _update(self):
         self.screen.fill((0, 0, 0))
+        for star in self.stars.sprites():
+            star.draw_star()
         self._draw_entities()
         pygame.display.flip()
 
@@ -51,6 +60,7 @@ class Game:
     def _check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                print(self.entities)
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 self._check_keydown(event)

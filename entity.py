@@ -1,11 +1,11 @@
 import pygame
 from pygame.sprite import Sprite
-from math import sin, cos, radians
+from math import sin, cos, radians, degrees, atan2, sqrt
 
 
 class Entity(Sprite):
     '''basic functions'''
-    def __init__(self, game, type, pos, angle, dir, velo, spin):
+    def __init__(self, game, type, pos, angle, dir, velo, spin, hp):
         super().__init__()
         # basic
         self.screen = game.screen
@@ -23,6 +23,11 @@ class Entity(Sprite):
         self.original_image = pygame.image.load(f'images/{type}.png')
         self.image = self.original_image
         self.rect = self.image.get_rect()
+        self.rect.center = self.pos
+        
+
+        # stats
+        self.hp = hp
 
     def draw(self):
         self.rect.center = self.pos
@@ -31,23 +36,83 @@ class Entity(Sprite):
 
     '''motion'''
     def update(self):
+        self._move()
+        self._check_collisions()
+
+    def _move(self):
         # spin
         if self.spin != 0:
             self.angle = (self.angle + self.spin) % 360
             self.image = pygame.transform.rotate(self.original_image, self.angle)
             self.rect = self.image.get_rect()
-            # self.angle += self.spin
-            # pygame.transform.rotate(self.image, self.spin)
-            # self.rect = self.image.get_rect()
-            # if self.angle > 360 or self.angle < -360:
-            #     self.angle = self.angle % 360
-        
+
         # move
         x_change = -sin(radians(self.dir)) * self.velo
         y_change = -cos(radians(self.dir)) * self.velo
         self.pos[0] += x_change
         self.pos[1] += y_change
 
+        self.rect.center = self.pos
+
+    def _check_collisions(self):
+        pass
+
+    def _handle_collision(self, entity, first_call=True):
+        pass
+
+    def _bounce(self, entity, first_call=True):
+        # Convert dir/velo to velocity vectors
+        self_vx = -sin(radians(self.dir)) * self.velo
+        self_vy = -cos(radians(self.dir)) * self.velo
+        entity_vx = -sin(radians(entity.dir)) * entity.velo
+        entity_vy = -cos(radians(entity.dir)) * entity.velo
+        
+        # Calculate collision normal (from self to entity)
+        dx = entity.pos[0] - self.pos[0]
+        dy = entity.pos[1] - self.pos[1]
+        distance = sqrt(dx**2 + dy**2)
+        
+        # Avoid division by zero
+        if distance == 0:
+            distance = 1
+            
+        # Normalize the collision normal
+        nx = dx / distance
+        ny = dy / distance
+        
+        # Project velocities onto collision normal
+        self_vel_normal = self_vx * nx + self_vy * ny
+        entity_vel_normal = entity_vx * nx + entity_vy * ny
+        
+        # Only handle collision if objects are moving toward each other
+        if self_vel_normal >= entity_vel_normal:
+            # For elastic collision with equal masses: exchange normal components
+            # new_self_normal = entity_vel_normal
+            # new_entity_normal = self_vel_normal
+            
+            # Calculate new velocities after collision
+            new_self_vx = self_vx + (entity_vel_normal - self_vel_normal) * nx
+            new_self_vy = self_vy + (entity_vel_normal - self_vel_normal) * ny
+
+            # bounce other entity off self
+            if first_call:
+                entity._handle_collision(self, False)
+            
+            # move out of collision range
+            while self.rect.colliderect(entity.rect):
+                self.pos[0] += new_self_vx
+                self.pos[1] += new_self_vy
+                self.rect.center = self.pos
+            
+            # Convert back to direction and velocity
+            self.velo = sqrt(new_self_vx*new_self_vx + new_self_vy*new_self_vy)
+            if self.velo > 0:
+                self.dir = degrees(atan2(-new_self_vx, -new_self_vy)) % 360
+
+    def take_damage(self, damage=1):
+        self.hp -= damage
+        if self.hp <= 0:
+            self.kill()
 
     '''str'''
     def __str__(self):
