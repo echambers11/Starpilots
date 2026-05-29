@@ -18,16 +18,25 @@ class Entity(Sprite):
         self.velo = velo
         self.spin = spin
 
+        self.accl = False
+
         # image
         self.type = type
         self.original_image = pygame.image.load(f'images/{type}.png')
-        self.image = self.original_image
-        self.rect = self.image.get_rect()
-        self.rect.center = self.pos
+        self.init_image()
         
 
         # stats
         self.hp = hp
+
+    def init_image(self):
+        if self.accl:
+            image = self.accl_image
+        else:
+            image = self.original_image
+        self.image = pygame.transform.rotate(image, self.angle)
+        self.rect = self.image.get_rect()
+        self.rect.center = self.pos
 
     def draw(self):
         self.rect.center = self.pos
@@ -43,8 +52,9 @@ class Entity(Sprite):
         # spin
         if self.spin != 0:
             self.angle = (self.angle + self.spin) % 360
-            self.image = pygame.transform.rotate(self.original_image, self.angle)
-            self.rect = self.image.get_rect()
+        
+        if  self.spin != 0 or self.accl:
+            self.init_image()
 
         # move
         x_change = -sin(radians(self.dir)) * self.velo
@@ -108,6 +118,23 @@ class Entity(Sprite):
             self.velo = sqrt(new_self_vx*new_self_vx + new_self_vy*new_self_vy)
             if self.velo > 0:
                 self.dir = degrees(atan2(-new_self_vx, -new_self_vy)) % 360
+
+    def _acclerate(self, accel):
+        # Convert dir/velo to velocity vectors
+        self_vx = -sin(radians(self.dir)) * self.velo
+        self_vy = -cos(radians(self.dir)) * self.velo
+        
+        # Accelerate in the direction of the ship's current direction
+        accel_vx = -sin(radians(self.angle)) * accel
+        accel_vy = -cos(radians(self.angle)) * accel
+        
+        new_vx = self_vx + accel_vx
+        new_vy = self_vy + accel_vy
+        
+        # Convert back to direction and velocity
+        self.velo = sqrt(new_vx*new_vx + new_vy*new_vy)
+        if self.velo > 0:
+            self.dir = degrees(atan2(-new_vx, -new_vy)) % 360
 
     def take_damage(self, damage=1):
         self.hp -= damage
