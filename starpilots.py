@@ -34,6 +34,9 @@ class Game:
         self.p1 = Starship(self, 1, [900, 300], 90, 0, 0, 0, 1000)
         self.entities.add(self.p1)
 
+        # bullets
+        self.bullets = pygame.sprite.Group()
+
     def run(self):
         while True:
             self._update()
@@ -61,6 +64,9 @@ class Game:
         for entity in self.entities:
             entity.update()
             entity.draw()
+        for bullet in self.bullets:
+            bullet.update(self.entities)
+            bullet.draw_bullet()
 
     
     """events"""
@@ -82,6 +88,8 @@ class Game:
         elif event.key == pygame.K_UP:
             self.p1.accl = True
             self.p1_accel = self.settings.ship_accel
+        elif event.key == pygame.K_DOWN:
+            self.bullets.add(self.p1.shoot())
     
     def _check_keyup(self, event):
         if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:

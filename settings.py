@@ -8,3 +8,9 @@ class Settings():
         # ship settings
         self.ship_accel = 0.1
         self.ship_turn = 0.1
+
+        # laser settings
+        self.bullet_color = (255, 0, 0)
+        self.bullet_width = 2
+        self.bullet_height = 10
+        self.bullet_speed = 5

@@ -1,4 +1,6 @@
 from entity import Entity
+from laser import Laser
+
 from pygame import image
 
 class Starship(Entity):
@@ -25,3 +27,7 @@ class Starship(Entity):
     def acclerate(self, accel):
         if accel != 0:
             self._acclerate(accel)
+
+    '''shooting'''
+    def shoot(self):
+        return Laser(self.screen, self.settings, self)
