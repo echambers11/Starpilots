@@ -1,0 +1,13 @@
+{"p1": {"type": 1, "pos": [900, 300], "angle": 180, "dir": 0, "velo": 0, "spin": 0, "hp": 10},
+ "enemies": [{"type": 3, "pos": [300, 900], "angle": 0, "dir": 0, "velo": 0, "spin": 0, "hp": 5},
+             {"type": 4, "pos": [900, 900], "angle": 0, "dir": 0, "velo": 0, "spin": 0, "hp": 5},
+             {"type": 2, "pos": [1000, 800], "angle": 0, "dir": 0, "velo": 0, "spin": 0, "hp": 5},
+             {"type": 5, "pos": [1000, 500], "angle": 0, "dir": 0, "velo": 0, "spin": 0, "hp": 5}],
+ "asteroids": [{"type": 1, "pos": [500, 500], "angle": 0, "dir": 0, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 2, "pos": [700, 700], "angle": 0, "dir": 160, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 3, "pos": [200, 200], "angle": 0, "dir": 320, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 4, "pos": [400, 400], "angle": 0, "dir": 120, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 1, "pos": [600, 600], "angle": 0, "dir": 300, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 2, "pos": [800, 800], "angle": 0, "dir": 80, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 3, "pos": [100, 100], "angle": 0, "dir": 240, "velo": 1, "spin": 5, "hp": 5},
+               {"type": 4, "pos": [300, 300], "angle": 0, "dir": 200, "velo": 1, "spin": 5, "hp": 5}]}

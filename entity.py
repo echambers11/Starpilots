@@ -70,6 +70,16 @@ class Entity(Sprite):
     def _handle_collision(self, entity, first_call=True):
         pass
 
+    def _return_to_screen(self):
+        if self.pos[0] < -50:
+            self.pos[0] = self.settings.screen_width + 50
+        elif self.pos[0] > self.settings.screen_width + 50:
+            self.pos[0] = -50
+        elif self.pos[1] < -50:
+            self.pos[1] = self.settings.screen_height + 50
+        elif self.pos[1] > self.settings.screen_height + 50:
+            self.pos[1] = -50
+
     def _bounce(self, entity, first_call=True):
         # Convert dir/velo to velocity vectors
         self_vx = -sin(radians(self.dir)) * self.velo

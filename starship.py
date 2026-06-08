@@ -2,14 +2,21 @@ from entity import Entity
 from laser import Laser
 
 from pygame import image
+from pygame import time
+
 
 class Starship(Entity):
     def __init__(self, game, type, pos, angle, dir, velo, spin, hp):
         super().__init__(game, f'starship{type}', pos, angle, dir, velo, spin, hp)
         self.accl_image = image.load(f'images/starship{type}accl.png')
+        self.attack_timer = 60
+        self.bullets = game.bullets
 
     '''collisions'''
     def _check_collisions(self):
+        # check past screen
+        self._return_to_screen()
+        
         # check collisions with other entities
         if self.alive():
             for entity in self.groups()[0]:
@@ -30,4 +37,7 @@ class Starship(Entity):
 
     '''shooting'''
     def shoot(self):
-        return Laser(self.screen, self.settings, self)
+        if time.get_ticks() > 3000:
+            if self.attack_timer > 60:
+                self.bullets.add(Laser(self.screen, self.settings, self))
+                self.attack_timer = 0

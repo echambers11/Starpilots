@@ -1,11 +1,12 @@
 import sys
 import pygame
 
-# from pathlib import Path
-# import json
+from pathlib import Path
+import json
 
 from settings import Settings
 from starship import Starship
+from enemy import Enemy
 from asteroid import Asteroid
 from stars import Star
 
@@ -20,22 +21,35 @@ class Game:
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Starpilots")
 
+        # load map
+        path = Path('maps/map1.json')
+        strfile = path.read_text()
+        self.map = json.loads(strfile)
+
         # entities
         self._create_stars()
         self.entities = pygame.sprite.Group()
 
-        # asteroids
-        for i in range(0, 9):
-            self.entities.add(Asteroid(self, 1, [i * 100, i * 100], 0, i*160, 1, 5, 5))
-        
-        # starships
-        self.p1_turn = 0
-        self.p1_accel = 0
-        self.p1 = Starship(self, 1, [900, 300], 90, 0, 0, 0, 1000)
-        self.entities.add(self.p1)
-
         # bullets
         self.bullets = pygame.sprite.Group()
+
+        # asteroids
+        for asteroid in self.map['asteroids']:
+            self.entities.add(Asteroid(self, asteroid['type'], asteroid['pos'], asteroid['angle'],
+                                       asteroid['dir'], asteroid['velo'], asteroid['spin'], asteroid['hp']))
+        
+        # p1
+        self.p1_turn = 0
+        self.p1_accel = 0
+        self.p1 = Starship(self, self.map['p1']['type'], self.map['p1']['pos'], self.map['p1']['angle'], self.map['p1']['dir'],
+                           self.map['p1']['velo'], self.map['p1']['spin'], self.map['p1']['hp'])
+        self.entities.add(self.p1)
+
+
+        # enemies
+        for enemy in self.map['enemies']:
+            self.entities.add(Enemy(self, enemy['type'], enemy['pos'], enemy['angle'], enemy['dir'],
+                                    enemy['velo'], enemy['spin'], enemy['hp']))
 
     def run(self):
         while True:
@@ -54,6 +68,7 @@ class Game:
 
     """draw screen"""
     def _update(self):
+        self.p1.attack_timer += 3
         self.screen.fill((0, 0, 0))
         for star in self.stars.sprites():
             star.draw_star()
@@ -73,7 +88,6 @@ class Game:
     def _check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
-                print(self.entities)
                 sys.exit()
             if event.type == pygame.KEYDOWN:
                 self._check_keydown(event)
@@ -88,8 +102,8 @@ class Game:
         elif event.key == pygame.K_UP:
             self.p1.accl = True
             self.p1_accel = self.settings.ship_accel
-        elif event.key == pygame.K_DOWN:
-            self.bullets.add(self.p1.shoot())
+        elif event.key == pygame.K_DOWN or event.key == pygame.K_SPACE:
+            self.p1.shoot()
     
     def _check_keyup(self, event):
         if event.key == pygame.K_LEFT or event.key == pygame.K_RIGHT:

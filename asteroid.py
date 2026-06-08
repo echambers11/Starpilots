@@ -7,14 +7,7 @@ class Asteroid(Entity):
 
     def _check_collisions(self):
         # check past screen
-        if self.pos[0] < -100:
-            self.pos[0] = self.settings.screen_width + 100
-        elif self.pos[0] > self.settings.screen_width + 100:
-            self.pos[0] = -100
-        elif self.pos[1] < -100:
-            self.pos[1] = self.settings.screen_height + 100
-        elif self.pos[1] > self.settings.screen_height + 100:
-            self.pos[1] = -100
+        self._return_to_screen()
 
         # check collisions with other entities
         if self.alive():

@@ -12,5 +12,8 @@ class Settings():
         # laser settings
         self.bullet_color = (255, 0, 0)
         self.bullet_width = 2
-        self.bullet_height = 10
+        self.bullet_height = 15
         self.bullet_speed = 5
+
+        # enemy settings
+        self.enemy_max_speed = 3

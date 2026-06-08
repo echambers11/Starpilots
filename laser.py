@@ -26,6 +26,7 @@ class Laser(Sprite):
         self.screen = screen
         self.settings = settings
         self.color = self.settings.bullet_color
+        self.speed = (self.settings.bullet_speed + ship.velo)
 
         # create points for slanted rectangle
         self.dir = ship.angle
@@ -65,8 +66,8 @@ class Laser(Sprite):
                 self.kill()
 
     def _move(self):
-        x_change = -sin(radians(self.dir)) * self.settings.bullet_speed
-        y_change = -cos(radians(self.dir)) * self.settings.bullet_speed
+        x_change = -sin(radians(self.dir)) * self.speed
+        y_change = -cos(radians(self.dir)) * self.speed
         self.polygon.move_points(x_change, y_change)
         self.center = [self.center[0] + x_change, self.center[1] + y_change]
 
