@@ -25,7 +25,7 @@ class Enemy(Starship):
     '''motion'''
     def update(self):
         self.accl = False
-        if time.get_ticks() > 3000:
+        if time.get_ticks() > self.start_time:
             self._aim()
             self._approach()
             self._attack()

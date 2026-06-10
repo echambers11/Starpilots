@@ -5,6 +5,8 @@ from pathlib import Path
 import json
 
 from settings import Settings
+from title import Title
+from button import Button
 from starship import Starship
 from enemy import Enemy
 from asteroid import Asteroid
@@ -20,15 +22,30 @@ class Game:
         self.settings = Settings()
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Starpilots")
+        self.game_active = False
+        self.menu_active = True 
+
+        # display
+        self._create_stars()
+        self._create_menu()
+        x = self.settings.screen_width // 2
+        y = self.settings.screen_height // 2 + 100
+        self.menu_button = Button(self, "Menu", (x, y), 150, 50)
+    
+
+    def _init_new_game(self, map):
+        self.game_active = True
+        self.menu_active = False
+        self.start_time = pygame.time.get_ticks()
 
         # load map
-        path = Path('maps/map1.json')
-        strfile = path.read_text()
+        map_path = Path(f'maps/{map}.json')
+        strfile = map_path.read_text()
         self.map = json.loads(strfile)
 
         # entities
-        self._create_stars()
         self.entities = pygame.sprite.Group()
+        self.enemies = pygame.sprite.Group()
 
         # bullets
         self.bullets = pygame.sprite.Group()
@@ -48,15 +65,10 @@ class Game:
 
         # enemies
         for enemy in self.map['enemies']:
-            self.entities.add(Enemy(self, enemy['type'], enemy['pos'], enemy['angle'], enemy['dir'],
-                                    enemy['velo'], enemy['spin'], enemy['hp']))
-
-    def run(self):
-        while True:
-            self._update()
-            self._check_events()
-            self._accl_entities()
-            self.clock.tick(60)
+            enemy = Enemy(self, enemy['type'], enemy['pos'], enemy['angle'], enemy['dir'],
+                                enemy['velo'], enemy['spin'], enemy['hp'])
+            self.entities.add(enemy)
+            self.enemies.add(enemy)
 
     
     '''create entities'''
@@ -65,14 +77,66 @@ class Game:
         for x in range(0, self.settings.star_count):
             self.stars.add(Star(self))
 
+    def _create_menu(self):
+        # get list of maps
+        map_list_path = Path("maps")
+        maps = []
+        for file in map_list_path.iterdir():
+            map = file.stem
+            maps.append(map)
+        maps.sort()
+
+        # create buttons
+        i = 0
+        self.map_buttons = []
+        for map in maps:
+            x = self.settings.screen_width // 2
+            y = 290 + i * 60
+            button = Button(self, map, (x, y), 200, 50)
+            self.map_buttons.append(button)
+            i += 1
+
+        # create title
+        x = self.settings.screen_width // 2
+        y = 130
+        self.title = Title(self, "Starpilots", (x, y))
+
+
+    '''main loop'''
+    def run(self):
+        while True:
+            self._update()
+            self._check_events()
+            if self.game_active:
+                self._accl_entities()
+                if not self.p1.alive():
+                    self.lose()
+                elif not self.enemies.sprites():
+                    self.win()
+            self.clock.tick(60)
+
 
     """draw screen"""
     def _update(self):
-        self.p1.attack_timer += 3
+        # draw background
         self.screen.fill((0, 0, 0))
         for star in self.stars.sprites():
             star.draw_star()
-        self._draw_entities()
+
+        # draw entities
+        if self.game_active:
+            self.p1.attack_timer += 3
+            self._draw_entities()
+
+        # draw menu
+        elif self.menu_active:
+            self._draw_menu()
+        
+        # draw menu button
+        if not self.menu_active and not self.game_active:
+            self.end_txt.draw()
+            self.menu_button.draw_button()
+
         pygame.display.flip()
 
     def _draw_entities(self):
@@ -83,16 +147,31 @@ class Game:
             bullet.update(self.entities)
             bullet.draw_bullet()
 
+    def _draw_menu(self):
+        self.title.draw()
+        for button in self.map_buttons:
+            button.draw_button()
     
     """events"""
     def _check_events(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
-            if event.type == pygame.KEYDOWN:
-                self._check_keydown(event)
-            if event.type == pygame.KEYUP:
-                self._check_keyup(event)
+            if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
+                self.end_game()
+                self.menu_active = True
+            
+            # check for in game events
+            if self.game_active:
+                if event.type == pygame.KEYDOWN:
+                    self._check_keydown(event)
+                if event.type == pygame.KEYUP:
+                    self._check_keyup(event)
+
+            # check for menu + end events
+            else:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    self._check_mousedown()
 
     def _check_keydown(self, event):
         if event.key == pygame.K_LEFT:
@@ -111,11 +190,45 @@ class Game:
         elif event.key == pygame.K_UP:
             self.p1.accl = False
             self.p1_accel = 0
+    
+    def _check_mousedown(self):
+        pos = pygame.mouse.get_pos()
 
+        if self.menu_active:
+            for button in self.map_buttons:
+                if button.is_pressed(pos):
+                    self._init_new_game(button.txt)
+        elif not self.game_active:
+            if self.menu_button.is_pressed(pos):
+                self.menu_active = True
+    
+    '''move player'''
     def _accl_entities(self):
         self.p1.turn(self.p1_turn)
         self.p1.acclerate(self.p1_accel)
 
+
+    '''end game'''
+    def win(self):
+        # create win screen
+        x = self.settings.screen_width // 2
+        y = self.settings.screen_height // 2
+        self.end_txt = Title(self, "You Win!", (x, y))
+        self.end_game()
+    
+    def lose(self):
+        # create lose screen
+        x = self.settings.screen_width // 2
+        y = self.settings.screen_height // 2
+        self.end_txt = Title(self, "You Lose!", (x, y))
+        self.end_game()
+
+    def end_game(self):
+        self.game_active = False
+        self.menu_active = False
+        self.entities.empty()
+        self.enemies.empty()
+        self.bullets.empty()
 
 
 

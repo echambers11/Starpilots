@@ -9,6 +9,7 @@ class Starship(Entity):
     def __init__(self, game, type, pos, angle, dir, velo, spin, hp):
         super().__init__(game, f'starship{type}', pos, angle, dir, velo, spin, hp)
         self.accl_image = image.load(f'images/starship{type}accl.png')
+        self.start_time = game.start_time + 3000
         self.attack_timer = 60
         self.bullets = game.bullets
 
@@ -37,7 +38,7 @@ class Starship(Entity):
 
     '''shooting'''
     def shoot(self):
-        if time.get_ticks() > 3000:
+        if time.get_ticks() > self.start_time:
             if self.attack_timer > 60:
                 self.bullets.add(Laser(self.screen, self.settings, self))
                 self.attack_timer = 0
