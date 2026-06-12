@@ -7,6 +7,7 @@ import json
 from settings import Settings
 from title import Title
 from button import Button
+from status_bar import StatusBar
 from starship import Starship
 from enemy import Enemy
 from asteroid import Asteroid
@@ -62,6 +63,7 @@ class Game:
                            self.map['p1']['velo'], self.map['p1']['spin'], self.map['p1']['hp'])
         self.entities.add(self.p1)
 
+        self.health_bar = StatusBar(self, "Health", (self.settings.screen_width - 100, 35), 150, 20, self.p1.hp, self.p1.hp)
 
         # enemies
         for enemy in self.map['enemies']:
@@ -127,6 +129,7 @@ class Game:
         if self.game_active:
             self.p1.attack_timer += 3
             self._draw_entities()
+            self.health_bar.draw()
 
         # draw menu
         elif self.menu_active:
@@ -206,6 +209,8 @@ class Game:
     def _accl_entities(self):
         self.p1.turn(self.p1_turn)
         self.p1.acclerate(self.p1_accel)
+        if self.p1.hp != self.health_bar.stat:
+            self.health_bar.change_stat(self.p1.hp)
 
 
     '''end game'''
@@ -236,3 +241,13 @@ class Game:
 if __name__ == '__main__':
     game = Game()
     game.run()
+
+
+'''
+Things to add:
+- effects (music, sounds, explosions)
+- campaigns
+- times and highscores
+- tutorial
+- types of enemies/bullets
+'''
