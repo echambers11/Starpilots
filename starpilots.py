@@ -144,7 +144,8 @@ class Game:
 
     def _draw_entities(self):
         for entity in self.entities:
-            entity.update()
+            if entity.live:
+                entity.update()
             entity.draw()
         for bullet in self.bullets:
             bullet.update(self.entities)
@@ -165,7 +166,7 @@ class Game:
                 self.menu_active = True
             
             # check for in game events
-            if self.game_active:
+            if self.game_active and self.p1.live:
                 if event.type == pygame.KEYDOWN:
                     self._check_keydown(event)
                 if event.type == pygame.KEYUP:

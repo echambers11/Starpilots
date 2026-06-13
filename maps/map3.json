@@ -1,0 +1,3 @@
+{"p1": {"type": 1, "pos": [100, 200], "angle": -90, "dir": 0, "velo": 0, "spin": 0, "hp": 15},
+ "enemies": [{"type": 3, "pos": [100, 750], "angle": -90, "dir": 0, "velo": 0, "spin": 0, "hp": 8}],
+ "asteroids": []}

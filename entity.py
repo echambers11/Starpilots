@@ -25,9 +25,10 @@ class Entity(Sprite):
         self.original_image = pygame.image.load(f'images/{type}.png')
         self.init_image()
         
-
         # stats
         self.hp = hp
+        self.live = True
+        self.death_time = None
 
     def init_image(self):
         if self.accl:
@@ -39,6 +40,10 @@ class Entity(Sprite):
         self.rect.center = self.pos
 
     def draw(self):
+        if not self.live:
+            if pygame.time.get_ticks() > self.death_time:
+                self.kill()
+                return None
         self.rect.center = self.pos
         self.screen.blit(self.image, self.rect)
 
@@ -149,7 +154,12 @@ class Entity(Sprite):
     def take_damage(self, damage=1):
         self.hp -= damage
         if self.hp <= 0:
-            self.kill()
+            self._explode()
+
+    def _explode(self):
+        self.image = pygame.image.load(f'images/explosion.png')
+        self.live = False
+        self.death_time = pygame.time.get_ticks() + 500
 
     '''str'''
     def __str__(self):

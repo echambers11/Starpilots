@@ -21,7 +21,7 @@ class Starship(Entity):
         # check collisions with other entities
         if self.alive():
             for entity in self.groups()[0]:
-                if entity != self and self.rect.colliderect(entity.rect):
+                if entity != self and self.rect.colliderect(entity.rect) and entity.live:
                     self._handle_collision(entity)
     
     def _handle_collision(self, entity, first_call=True):
