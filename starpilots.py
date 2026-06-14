@@ -8,6 +8,7 @@ from settings import Settings
 from title import Title
 from button import Button
 from status_bar import StatusBar
+from counter import Counter
 from starship import Starship
 from enemy import Enemy
 from asteroid import Asteroid
@@ -23,8 +24,12 @@ class Game:
         self.settings = Settings()
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Starpilots")
+
+        # state
         self.game_active = False
         self.menu_active = True 
+        self.campaigning = False
+        self.campaign = None
 
         # display
         self._create_stars()
@@ -83,9 +88,11 @@ class Game:
         # get list of maps
         map_list_path = Path("maps")
         maps = []
+        self.maps_folder = []
         for file in map_list_path.iterdir():
             map = file.stem
             maps.append(map)
+            self.maps_folder.append(str(file))
         maps.sort()
 
         # create buttons
@@ -130,6 +137,8 @@ class Game:
             self.p1.attack_timer += 3
             self._draw_entities()
             self.health_bar.draw()
+            if self.campaigning:
+                self.lvl_counter.draw()
 
         # draw menu
         elif self.menu_active:
@@ -201,7 +210,28 @@ class Game:
         if self.menu_active:
             for button in self.map_buttons:
                 if button.is_pressed(pos):
-                    self._init_new_game(button.txt)
+                    # if file do map
+                    print(self.maps_folder)
+                    print(f"maps/{button.txt}.json")
+                    if f"maps/{button.txt}.json" in self.maps_folder:
+                        self._init_new_game(button.txt)
+                    # if folder do campaign
+                    else:
+                        # get maps in campaign
+                        campaign_path = Path(f"maps/{button.txt}")
+                        self.campaign_folder = []
+                        for file in campaign_path.iterdir():
+                            map = file.stem
+                            self.campaign_folder.append(map)
+                        self.campaign_folder.sort()
+
+                        # run campaign
+                        self.campaigning = True
+                        self.campaign = button.txt
+                        self.lvl = 0
+                        self.lvl_counter = Counter(self, "level", (self.settings.screen_width - 65, 70), self.lvl+1)
+                        self._init_new_game(f"{self.campaign}/{self.campaign_folder[self.lvl]}")
+                        
         elif not self.game_active:
             if self.menu_button.is_pressed(pos):
                 self.menu_active = True
@@ -216,7 +246,18 @@ class Game:
 
     '''end game'''
     def win(self):
-        # create win screen
+        # next lvl if in campaign
+        if self.campaigning:
+            self.lvl += 1
+            self.lvl_counter.change_stat(self.lvl+1)
+            if self.lvl < len(self.campaign_folder):
+                self._init_new_game(f"{self.campaign}/{self.campaign_folder[self.lvl]}")
+                return None
+
+        # otherwise create win screen
+        self.campaigning = False
+        self.campaign = None
+
         x = self.settings.screen_width // 2
         y = self.settings.screen_height // 2
         self.end_txt = Title(self, "You Win!", (x, y))
@@ -224,6 +265,9 @@ class Game:
     
     def lose(self):
         # create lose screen
+        self.campaigning = False
+        self.campaign = None
+
         x = self.settings.screen_width // 2
         y = self.settings.screen_height // 2
         self.end_txt = Title(self, "You Lose!", (x, y))
@@ -246,7 +290,7 @@ if __name__ == '__main__':
 
 '''
 Things to add:
-- effects (music, sounds, explosions)
+- effects (music, sounds)
 - campaigns
 - times and highscores
 - tutorial
