@@ -12,6 +12,7 @@ class Starship(Entity):
         self.start_time = game.start_time + 3000
         self.attack_timer = 60
         self.bullets = game.bullets
+        self.laser_sound = game.laser
 
     '''collisions'''
     def _check_collisions(self):
@@ -41,4 +42,5 @@ class Starship(Entity):
         if time.get_ticks() > self.start_time:
             if self.attack_timer > 60:
                 self.bullets.add(Laser(self.screen, self.settings, self))
+                self.laser_sound.play()
                 self.attack_timer = 0

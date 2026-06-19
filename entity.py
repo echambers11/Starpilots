@@ -11,6 +11,9 @@ class Entity(Sprite):
         self.screen = game.screen
         self.settings = game.settings
 
+        # sounds
+        self.boom = game.boom
+
         # pos + velo
         self.pos = pos
         self.angle = angle
@@ -158,6 +161,7 @@ class Entity(Sprite):
 
     def _explode(self):
         self.image = pygame.image.load(f'images/explosion.png')
+        self.boom.play()
         self.live = False
         self.death_time = pygame.time.get_ticks() + 500
 

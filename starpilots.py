@@ -25,6 +25,18 @@ class Game:
         self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
         pygame.display.set_caption("Starpilots")
 
+        # sounds
+        pygame.mixer.init()
+        self.boom = pygame.mixer.Sound(r'sounds/boom.mp3')
+        self.boom.set_volume(0.15)
+        self.laser = pygame.mixer.Sound(r'sounds/laser.mp3')
+        self.laser.set_volume(0.15)
+        self.asteroid = pygame.mixer.Sound(r'sounds/asteroid.mp3')
+        self.asteroid.set_volume(0.3)
+        self.music = pygame.mixer.Sound(r'sounds/music.mp3')
+        self.music.set_volume(1.0)
+        self.music.play(-1)
+
         # state
         self.game_active = False
         self.menu_active = True 

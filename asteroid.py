@@ -4,6 +4,7 @@ from pygame import image, time
 class Asteroid(Entity):
     def __init__(self, game, type, pos, angle, dir, velo, spin, hp):
         super().__init__(game, f'asteroid{type}', pos, angle, dir, velo, spin, hp)
+        self.crash = game.asteroid
 
     def _check_collisions(self):
         # check past screen
@@ -21,5 +22,6 @@ class Asteroid(Entity):
 
     def _explode(self):
         self.image = image.load(f'images/{self.type}explode.png')
+        self.crash.play()
         self.live = False
         self.death_time = time.get_ticks() + 500
