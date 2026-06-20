@@ -17,3 +17,18 @@ class Settings():
 
         # enemy settings
         self.enemy_max_speed = 3
+
+        # menus
+        self.controls_info = ['Move Forward: ^',
+                              'Spin Left: <',
+                              'Spin Right: >',
+                              'Shoot: Space',
+                              "The arrow keys do not",
+                              "change your ship's velocity."]
+        
+        self.tips_info = ['You are the maroon, V-shaped ship.',
+                          'Your goal is to destroy the enemies.',
+                          'The enemies are all the other ships on the screen.',
+                          'Avoid asteroids and lasers to stay alive.',
+                          'You can shoot lasers to destroy enemies and asteroids.',
+                          'The faster you go, the harder it is to control your ship.']

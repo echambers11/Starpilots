@@ -9,6 +9,7 @@ from title import Title
 from button import Button
 from status_bar import StatusBar
 from counter import Counter
+from menu import Menu
 from starship import Starship
 from enemy import Enemy
 from asteroid import Asteroid
@@ -40,14 +41,13 @@ class Game:
         # state
         self.game_active = False
         self.menu_active = True 
-        self.control_screen_active = False
         self.campaigning = False
         self.campaign = None
 
         # display
         self._create_stars()
         self._create_menu()
-        self._create_controls_screen()
+        self._create_info_screens()
         x = self.settings.screen_width // 2
         y = self.settings.screen_height // 2 + 100
         self.menu_button = Button(self, "Menu", (x, y), 150, 50)
@@ -119,8 +119,6 @@ class Game:
             self.map_buttons.append(button)
             i += 1
 
-        self.controls_button = Button(self, 'Controls', (self.settings.screen_width - 120, self.settings.screen_height - 40), 200, 50)
-
         # create title
         x = self.settings.screen_width // 2
         y = 130
@@ -132,21 +130,12 @@ class Game:
         self.background_rect = self.background_img.get_rect()
         self.background_rect.center = (self.settings.screen_width / 2, self.settings.screen_height / 2 + 110)
 
-    def _create_controls_screen(self):
-        self.control_screen_title = Title(self, "Controls", (self.settings.screen_width // 2, 130))
-        controls = ['Move Forward: ^',
-                    'Spin Left: <',
-                    'Spin Right: >',
-                    'Shoot: Space',
-                    "The arrow keys do not",
-                    "change your ship's velocity"]
-        
-        self.controls = []
-        i = 0
-        for control in controls:
-            self.controls.append(Title(self, control, (self.settings.screen_width / 2, 260 + 45 * i), 45))
-            i += 1
+    def _create_info_screens(self):
+        controls_button = Button(self, "Controls", (self.settings.screen_width - 130, self.settings.screen_height - 45), 220, 50)
+        tips_button = Button(self, "How To Play", (self.settings.screen_width - 130, self.settings.screen_height - 110), 220, 50)
 
+        self.controls_screen = Menu(self, "Controls", controls_button, self.settings.controls_info)
+        self.tips_screen = Menu(self, "How To Play", tips_button, self.settings.tips_info)
 
     '''main loop'''
     def run(self):
@@ -181,13 +170,15 @@ class Game:
         elif self.menu_active:
             self._draw_menu()
 
-        elif self.control_screen_active:
-            self._draw_controls()
+        elif self.controls_screen.active:
+            self.controls_screen.draw()
+        elif self.tips_screen.active:
+            self.tips_screen.draw()
         
         # draw menu button
         if not self.menu_active and not self.game_active:
             self.menu_button.draw_button()
-            if not self.control_screen_active:
+            if not self.controls_screen.active and not self.tips_screen.active:
                 self.end_txt.draw()
 
         pygame.display.flip()
@@ -206,12 +197,9 @@ class Game:
         self.title.draw()
         for button in self.map_buttons:
             button.draw_button()
-        self.controls_button.draw_button()
+        self.controls_screen.button.draw_button()
+        self.tips_screen.button.draw_button()
 
-    def _draw_controls(self):
-        self.control_screen_title.draw()
-        for control in self.controls:
-            control.draw()
     
     """events"""
     def _check_events(self):
@@ -278,14 +266,19 @@ class Game:
                         self.lvl_counter = Counter(self, "level", (self.settings.screen_width - 65, 70), self.lvl+1)
                         self._init_new_game(f"{self.campaign}/{self.campaign_folder[self.lvl]}")
             # controls button
-            if self.controls_button.is_pressed(pos):
+            if self.controls_screen.button.is_pressed(pos):
                 self.menu_active = False
-                self.control_screen_active = True
+                self.controls_screen.active = True
+            # tips button
+            if self.tips_screen.button.is_pressed(pos):
+                self.menu_active = False
+                self.tips_screen.active = True
                         
         elif not self.game_active:
             if self.menu_button.is_pressed(pos):
                 self.menu_active = True
-                self.control_screen_active = False
+                self.controls_screen.active = False
+                self.tips_screen.active = False
     
     '''move player'''
     def _accl_entities(self):
@@ -341,9 +334,7 @@ if __name__ == '__main__':
 
 '''
 Things to add:
-- effects (music, sounds)
-- background of starship1 on menu?
 - times and highscores
-- tutorial
+- tips?
 - types of enemies/bullets
 '''
