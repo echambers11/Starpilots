@@ -18,6 +18,12 @@ class Settings():
         # enemy settings
         self.enemy_max_speed = 3
 
+        # score
+        self.pts = 0
+        self.pts_per_hit = 50
+        self.secs = 0
+        self.hp = 0
+
         # menus
         self.controls_info = ['Move Forward: ^',
                               'Spin Left: <',

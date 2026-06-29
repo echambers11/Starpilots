@@ -6,13 +6,14 @@ from pygame import time
 
 
 class Starship(Entity):
-    def __init__(self, game, type, pos, angle, dir, velo, spin, hp):
+    def __init__(self, game, type, pos, angle, dir, velo, spin, hp, p1 = False):
         super().__init__(game, f'starship{type}', pos, angle, dir, velo, spin, hp)
         self.accl_image = image.load(f'images/starship{type}accl.png')
         self.start_time = game.start_time + 3000
         self.attack_timer = 60
         self.bullets = game.bullets
         self.laser_sound = game.laser
+        self.is_p1 = p1
 
     '''collisions'''
     def _check_collisions(self):

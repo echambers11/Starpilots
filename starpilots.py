@@ -9,6 +9,7 @@ from title import Title
 from button import Button
 from status_bar import StatusBar
 from counter import Counter
+from timer import Timer
 from menu import Menu
 from starship import Starship
 from enemy import Enemy
@@ -51,6 +52,11 @@ class Game:
         x = self.settings.screen_width // 2
         y = self.settings.screen_height // 2 + 100
         self.menu_button = Button(self, "Menu", (x, y), 150, 50)
+
+        # highscores
+        highscore_path = Path(f'highscores.json')
+        strfile = highscore_path.read_text()
+        self.highscores = json.loads(strfile)
     
 
     def _init_new_game(self, map):
@@ -62,6 +68,7 @@ class Game:
         map_path = Path(f'maps/{map}.json')
         strfile = map_path.read_text()
         self.map = json.loads(strfile)
+        self.map_name = map
 
         # entities
         self.entities = pygame.sprite.Group()
@@ -79,7 +86,7 @@ class Game:
         self.p1_turn = 0
         self.p1_accel = 0
         self.p1 = Starship(self, self.map['p1']['type'], self.map['p1']['pos'], self.map['p1']['angle'], self.map['p1']['dir'],
-                           self.map['p1']['velo'], self.map['p1']['spin'], self.map['p1']['hp'])
+                           self.map['p1']['velo'], self.map['p1']['spin'], self.map['p1']['hp'], True)
         self.entities.add(self.p1)
 
         self.health_bar = StatusBar(self, "Health", (self.settings.screen_width - 100, 35), 150, 20, self.p1.hp, self.p1.hp)
@@ -91,6 +98,11 @@ class Game:
             self.entities.add(enemy)
             self.enemies.add(enemy)
 
+        # timer + score
+        self.timer = Timer(self, (50, 35), self.start_time)
+        self.score_counter = Counter(self, "Score", (70, 70), 0)
+        name = map.split('/')[0]
+        self.highscore_counter = Counter(self, "Highscore", (90, 105), self.highscores[name])
     
     '''create entities'''
     def _create_stars(self):
@@ -162,9 +174,15 @@ class Game:
         if self.game_active:
             self.p1.attack_timer += 3
             self._draw_entities()
+            # draw stats
             self.health_bar.draw()
             if self.campaigning:
                 self.lvl_counter.draw()
+            self.timer.draw(pygame.time.get_ticks())
+            self.score_counter.change_stat(self._get_score())
+            self.score_counter.draw()
+            self.highscore_counter.draw()
+            
 
         # draw menu
         elif self.menu_active:
@@ -180,8 +198,21 @@ class Game:
             self.menu_button.draw_button()
             if not self.controls_screen.active and not self.tips_screen.active:
                 self.end_txt.draw()
+                # draw stats
+                self.health_bar.draw()
+                if self.campaigning:
+                    self.lvl_counter.draw()
+                self.timer.draw()
+                self.score_counter.draw()
+                self.highscore_counter.draw()
 
         pygame.display.flip()
+
+    def _get_score(self):
+        if self.settings.secs + self.timer.secs > 0:
+            return (self.settings.pts - (self.settings.secs + self.timer.secs)*2)
+        else:
+            return 0
 
     def _draw_entities(self):
         for entity in self.entities:
@@ -279,6 +310,7 @@ class Game:
                 self.menu_active = True
                 self.controls_screen.active = False
                 self.tips_screen.active = False
+                self.settings.pts = 0
     
     '''move player'''
     def _accl_entities(self):
@@ -295,6 +327,10 @@ class Game:
             self.lvl += 1
             self.lvl_counter.change_stat(self.lvl+1)
             if self.lvl < len(self.campaign_folder):
+                if self.health_bar.stat < 0:
+                    self.health_bar.stat = 0
+                self.settings.hp += self.health_bar.stat
+                self.settings.secs += self.timer.secs
                 self._init_new_game(f"{self.campaign}/{self.campaign_folder[self.lvl]}")
                 return None
 
@@ -304,7 +340,11 @@ class Game:
 
         x = self.settings.screen_width // 2
         y = self.settings.screen_height // 2
-        self.end_txt = Title(self, "You Win!", (x, y))
+        new_high = self._update_highscore()
+        if new_high:
+            self.end_txt = Title(self, "New Highscore!", (x, y))
+        else:
+            self.end_txt = Title(self, "You Win!", (x, y))
         self.end_game()
     
     def lose(self):
@@ -318,11 +358,25 @@ class Game:
         self.end_game()
 
     def end_game(self):
+        self.settings.secs = 0
         self.game_active = False
         self.menu_active = False
         self.entities.empty()
         self.enemies.empty()
         self.bullets.empty()
+    
+    def _update_highscore(self):
+        score = self._get_score()
+        self.score_counter.change_stat(score)
+        if score > self.highscore_counter.stat:
+            self.highscore_counter.change_stat(score)
+            name = self.map_name.split('/')[0]
+            highscore_path = Path(f'highscores.json')
+            self.highscores[name] = score
+            strfile = json.dumps(self.highscores, indent=4)
+            highscore_path.write_text(strfile)
+            return True
+        return False
 
 
 
@@ -334,7 +388,6 @@ if __name__ == '__main__':
 
 '''
 Things to add:
-- times and highscores
-- tips?
+- highscores when win
 - types of enemies/bullets
 '''

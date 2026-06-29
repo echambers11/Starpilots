@@ -27,6 +27,7 @@ class Laser(Sprite):
         self.settings = settings
         self.color = self.settings.bullet_color
         self.speed = (self.settings.bullet_speed + ship.velo)
+        self.from_p1 = ship.is_p1
 
         # create points for slanted rectangle
         self.dir = ship.angle
@@ -57,6 +58,8 @@ class Laser(Sprite):
         for entity in entities:
             if self.check_collision(entity):
                 entity.take_damage(5)
+                if self.from_p1:
+                    self.settings.pts += self.settings.pts_per_hit
                 self.kill()
                 break
 
