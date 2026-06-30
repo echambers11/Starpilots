@@ -102,6 +102,8 @@ class Game:
         self.timer = Timer(self, (50, 35), self.start_time)
         self.score_counter = Counter(self, "Score", (70, 70), 0)
         name = map.split('/')[0]
+        if name not in self.highscores:
+            self.highscores[name] = 0
         self.highscore_counter = Counter(self, "Highscore", (90, 105), self.highscores[name])
     
     '''create entities'''
@@ -209,10 +211,11 @@ class Game:
         pygame.display.flip()
 
     def _get_score(self):
-        if self.settings.secs + self.timer.secs > 0:
-            return (self.settings.pts - (self.settings.secs + self.timer.secs)*2)
-        else:
+        score = self.settings.pts - (self.settings.secs + self.timer.secs)*2
+        if score < 0:
             return 0
+        else:
+            return score
 
     def _draw_entities(self):
         for entity in self.entities:

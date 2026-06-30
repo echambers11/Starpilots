@@ -127,6 +127,11 @@ class Entity(Sprite):
                 entity._handle_collision(self, False)
             
             # move out of collision range
+            if self.rect.colliderect(entity.rect) and new_self_vx == 0 and new_self_vy == 0:
+                # If both velocities are zero kill self to avoid infinite loop
+                self.kill()
+                return None
+            
             while self.rect.colliderect(entity.rect):
                 self.pos[0] += new_self_vx
                 self.pos[1] += new_self_vy
