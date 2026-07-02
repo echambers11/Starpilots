@@ -24,7 +24,8 @@ class Game:
         # basic
         self.clock = pygame.time.Clock()
         self.settings = Settings()
-        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height))
+        self.screen = pygame.display.set_mode((self.settings.screen_width, self.settings.screen_height), flags = pygame.RESIZABLE)
+        self.screen_size = self.screen.get_rect().size
         pygame.display.set_caption("Starpilots")
 
         # sounds
@@ -49,9 +50,6 @@ class Game:
         self._create_stars()
         self._create_menu()
         self._create_info_screens()
-        x = self.settings.screen_width // 2
-        y = self.settings.screen_height // 2 + 100
-        self.menu_button = Button(self, "Menu", (x, y), 150, 50)
 
         # highscores
         highscore_path = Path(f'highscores.json')
@@ -69,6 +67,16 @@ class Game:
         strfile = map_path.read_text()
         self.map = json.loads(strfile)
         self.map_name = map
+
+        # transform for screen size
+        self.map['p1']['pos'][0] = self.map['p1']['pos'][0] * self.screen_size[0] / self.settings.screen_width
+        self.map['p1']['pos'][1] = self.map['p1']['pos'][1] * self.screen_size[1] / self.settings.screen_height
+        for asteroid in self.map['asteroids']:
+            asteroid['pos'][0] = asteroid['pos'][0] * self.screen_size[0] / self.settings.screen_width
+            asteroid['pos'][1] = asteroid['pos'][1] * self.screen_size[1] / self.settings.screen_height
+        for enemy in self.map['enemies']:
+            enemy['pos'][0] = enemy['pos'][0] * self.screen_size[0] / self.settings.screen_width
+            enemy['pos'][1] = enemy['pos'][1] * self.screen_size[1] / self.settings.screen_height
 
         # entities
         self.entities = pygame.sprite.Group()
@@ -89,7 +97,7 @@ class Game:
                            self.map['p1']['velo'], self.map['p1']['spin'], self.map['p1']['hp'], True)
         self.entities.add(self.p1)
 
-        self.health_bar = StatusBar(self, "Health", (self.settings.screen_width - 100, 35), 150, 20, self.p1.hp, self.p1.hp)
+        self.health_bar = StatusBar(self, "Health", (self.screen_size[0] - 100, 35), 150, 20, self.p1.hp, self.p1.hp)
 
         # enemies
         for enemy in self.map['enemies']:
@@ -127,14 +135,14 @@ class Game:
         i = 0
         self.map_buttons = []
         for map in maps:
-            x = self.settings.screen_width // 2
+            x = self.screen_size[0] // 2
             y = 290 + i * 60
             button = Button(self, map, (x, y), 200, 50)
             self.map_buttons.append(button)
             i += 1
 
         # create title
-        x = self.settings.screen_width // 2
+        x = self.screen_size[0] // 2
         y = 130
         self.title = Title(self, "Starpilots", (x, y))
 
@@ -142,14 +150,18 @@ class Game:
         self.background_img = pygame.image.load(f'images/starship_background.png')
         self.background_img = pygame.transform.scale(self.background_img, (810, 830))
         self.background_rect = self.background_img.get_rect()
-        self.background_rect.center = (self.settings.screen_width / 2, self.settings.screen_height / 2 + 110)
+        self.background_rect.center = (self.screen_size[0] / 2, self.screen_size[1] / 2 + 110)
 
     def _create_info_screens(self):
-        controls_button = Button(self, "Controls", (self.settings.screen_width - 130, self.settings.screen_height - 45), 220, 50)
-        tips_button = Button(self, "How To Play", (self.settings.screen_width - 130, self.settings.screen_height - 110), 220, 50)
+        controls_button = Button(self, "Controls", (self.screen_size[0] - 130, self.screen_size[1] - 45), 220, 50)
+        tips_button = Button(self, "How To Play", (self.screen_size[0] - 130, self.screen_size[1] - 110), 220, 50)
 
         self.controls_screen = Menu(self, "Controls", controls_button, self.settings.controls_info)
         self.tips_screen = Menu(self, "How To Play", tips_button, self.settings.tips_info)
+
+        x = self.screen_size[0] // 2
+        y = self.screen_size[1] // 2 + 100
+        self.menu_button = Button(self, "Menu", (x, y), 150, 50)
 
     '''main loop'''
     def run(self):
@@ -240,9 +252,14 @@ class Game:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit()
+            if event.type == pygame.WINDOWRESIZED:
+                self._resize_window()
             if event.type == pygame.KEYDOWN and event.key == pygame.K_ESCAPE:
-                self.end_game()
-                self.menu_active = True
+                if self.game_active:
+                    self.end_game()
+                    self.menu_active = True
+                else:
+                    sys.exit()
             
             # check for in game events
             if self.game_active and self.p1.live:
@@ -297,7 +314,7 @@ class Game:
                         self.campaigning = True
                         self.campaign = button.txt
                         self.lvl = 0
-                        self.lvl_counter = Counter(self, "level", (self.settings.screen_width - 65, 70), self.lvl+1)
+                        self.lvl_counter = Counter(self, "level", (self.screen_size[0] - 65, 70), self.lvl+1)
                         self._init_new_game(f"{self.campaign}/{self.campaign_folder[self.lvl]}")
             # controls button
             if self.controls_screen.button.is_pressed(pos):
@@ -314,6 +331,22 @@ class Game:
                 self.controls_screen.active = False
                 self.tips_screen.active = False
                 self.settings.pts = 0
+
+    def _resize_window(self):
+        self.screen_size = self.screen.get_rect().size
+        # remake menu + info screens
+        self._create_menu()
+        self._create_info_screens()
+        self._create_stars()
+
+        # remake health bar + counters
+        if not self.menu_active:
+            self.health_bar = StatusBar(self, "Health", (self.screen_size[0] - 100, 35), 150, 20, self.health_bar.max_stat, self.health_bar.stat)
+            if self.campaigning:
+                self.lvl_counter = Counter(self, "level", (self.screen_size[0] - 65, 70), self.lvl_counter.stat)
+            if not self.game_active:
+                self.end_txt.rect.center = (self.screen_size[0] // 2, self.screen_size[1] // 2)
+
     
     '''move player'''
     def _accl_entities(self):
@@ -341,8 +374,8 @@ class Game:
         self.campaigning = False
         self.campaign = None
 
-        x = self.settings.screen_width // 2
-        y = self.settings.screen_height // 2
+        x = self.screen_size[0] // 2
+        y = self.screen_size[1] // 2
         new_high = self._update_highscore()
         if new_high:
             self.end_txt = Title(self, "New Highscore!", (x, y))
@@ -355,8 +388,8 @@ class Game:
         self.campaigning = False
         self.campaign = None
 
-        x = self.settings.screen_width // 2
-        y = self.settings.screen_height // 2
+        x = self.screen_size[0] // 2
+        y = self.screen_size[1] // 2
         self.end_txt = Title(self, "You Lose!", (x, y))
         self.end_game()
 
@@ -387,10 +420,3 @@ class Game:
 if __name__ == '__main__':
     game = Game()
     game.run()
-
-
-'''
-Things to add:
-- highscores when win
-- types of enemies/bullets
-'''

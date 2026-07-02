@@ -17,7 +17,7 @@ class StatusBar:
         # rects
         self.outline_rect = Rect(0, 0, self.width, self.height)
         self.outline_rect.center = center
-        self.bar_rect = Rect(0, 0, ((self.width - 8) * self.max_stat / self.stat), self.height - 8)
+        self.bar_rect = Rect(0, 0, ((self.width - 8) * self.stat / self.max_stat), self.height - 8)
         self.bar_rect.center = self.outline_rect.center       
         self.bar_rect.left = self.outline_rect.left + 4
 

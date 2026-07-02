@@ -10,6 +10,7 @@ class Entity(Sprite):
         # basic
         self.screen = game.screen
         self.settings = game.settings
+        self.game = game
 
         # sounds
         self.boom = game.boom
@@ -80,12 +81,12 @@ class Entity(Sprite):
 
     def _return_to_screen(self):
         if self.pos[0] < -50:
-            self.pos[0] = self.settings.screen_width + 50
-        elif self.pos[0] > self.settings.screen_width + 50:
+            self.pos[0] = self.game.screen_size[0] + 50
+        elif self.pos[0] > self.game.screen_size[0] + 50:
             self.pos[0] = -50
         elif self.pos[1] < -50:
-            self.pos[1] = self.settings.screen_height + 50
-        elif self.pos[1] > self.settings.screen_height + 50:
+            self.pos[1] = self.game.screen_size[1] + 50
+        elif self.pos[1] > self.game.screen_size[1] + 50:
             self.pos[1] = -50
 
     def _bounce(self, entity, first_call=True):
